@@ -52,6 +52,7 @@ Data:
     
 ## To do
 
-[] Loading states, built in and customisable
-[] Events
-[] Toggle auto binding, enable api for calling bind on the container
+- Unit tests
+- Loading states, built in and customisable
+- Events
+- Toggle auto binding, enable api for calling bind on the container
