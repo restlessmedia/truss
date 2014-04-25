@@ -2,7 +2,7 @@ $.ajaxSetup({isLocal: true, crossDomain: true});
 
 $.ajax = function () {
     var deferred = $.Deferred();
-    var count = 1000;
+    var count = 10;
     var data = [];
 
     while (count--) {
