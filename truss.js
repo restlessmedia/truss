@@ -17,7 +17,7 @@
     // helper for iterating over collections
     var forEach = function (a, fn) {
         var len = a.length || 0;
-        var results = new Array(i);
+        var results = new Array(len);
         if (len) {
             var i = len - 1;
             while (i > -1) {
@@ -58,7 +58,6 @@
         var that = this;
         var row = that.element;
         if ('length' in data) {
-            var rows = [data.length - 1];
             forEach(data, function (i) {
                 that.bindRow(row, this);
                 // only create a new row if last data item
