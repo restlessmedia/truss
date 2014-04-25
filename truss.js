@@ -43,7 +43,6 @@
 
 
     Field.prototype.set = function (value) {
-        // TODO: different binding techniques for different node types
         $(this.element).text(value);
     };
 
