@@ -67,7 +67,7 @@
                 }
             });
         } else {
-            this.bindRow(row, data);
+            that.bindRow(row, data);
         }
     };
 
