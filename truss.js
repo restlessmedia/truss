@@ -1,7 +1,6 @@
 (function () {
     var _root = this;
     var _truss;
-    var _fieldPlugins = []; // contains all the fields plugins
 
     if (typeof exports !== 'undefined') {
         _truss = exports;
@@ -17,67 +16,60 @@
 
     // helper for iterating over collections
     var forEach = function (a, fn) {
-        var i = a.length || 0;
+        var len = a.length || 0;
         var results = new Array(i);
-        if (i) {
-            while (i--) {
-                var result = fn.call(a[i]);
+        if (len) {
+            var i = len - 1;
+            while (i > -1) {
+                var result = fn.apply(a[i], [i]);
                 results[i] = result;
-
                 if (result === false) {
                     break;
                 }
+                i--;
             }
         }
         return results;
     };
 
-    // a field is a model of a field for a container
-    var Field = function (element, config) {
-        var name = config.name.split(':');
-        this.element = element;
-        this.name = name[0];
-        this.plugin = name.length == 2 ? name[1] : null;
-        return this;
-    };
-
-
-    Field.prototype.set = function (value) {
-        $(this.element).text(value);
-    };
-
-    Field.prototype.bind = function (container, data) {
-        var value;
-
-        if (data.hasOwnProperty(this.name)) {
-            value = data[this.name];
-        }
-
-        if (this.plugin && _fieldPlugins[this.plugin]) {
-            _fieldPlugins[this.plugin](container, this, value);
-        }
-        else {
-            this.set(value);
-        }
-    };
-
-    // field plugin registration
-    _truss.registerFieldPlugin = function (name, fn) {
-        _fieldPlugins[name] = fn;
-    };
-
-    // a container is a truss container which encapsulates the binding fields for an endpoint
-    var Container = function (element, config, fields) {
+    var Container = function (element, config) {
         this.src = config.src;
-        this.fields = fields;
+        this.element = element;
         return this;
+    };
+
+    Container.prototype.clone = function () {
+        var element = this.element.cloneNode(true);
+        element.removeAttribute('data-src');
+        return element;
+    };
+
+    Container.prototype.bindRow = function (row, data) {
+        var that = this;
+        forEach($(row).find('[data-name]'), function () {
+            var name = this.getAttribute('data-name');
+            if (data.hasOwnProperty(name)) {
+                $(this).text(data[name]);
+            }
+        });
     };
 
     Container.prototype.bind = function (data) {
         var that = this;
-        forEach(this.fields, function () {
-            this.bind(that, data);
-        });
+        var row = that.element;
+        if ('length' in data) {
+            var rows = [data.length - 1];
+            forEach(data, function (i) {
+                that.bindRow(row, this);
+                // only create a new row if last data item
+                if (i > 0) {
+                    row = that.clone();
+                    that.element.parentNode.appendChild(row);
+                }
+            });
+        } else {
+            this.bindRow(row, data);
+        }
     };
 
     var dataAttr = function (element) {
@@ -97,17 +89,10 @@
         });
     };
 
-    // finds bindable fields in an elements children
-    var findFields = function (element) {
-        return forEach($(element).find('[data-name]'), function () {
-            return new Field(this, dataAttr(this));
-        });
-    };
-
     // finds containers in the dom to register
     var findContainers = function () {
         return forEach(_truss.$('[data-src]'), function () {
-            return new Container(this, dataAttr(this), findFields(this));
+            return new Container(this, dataAttr(this));
         });
     };
 
