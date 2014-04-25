@@ -49,3 +49,9 @@ Data:
 			<td data-name="createdOn">Fri Apr 25 2014 12:42:12 GMT+0100 (GMT Daylight Time)</td>
 		</tr>
     </table>
+    
+## To do
+
+[] Loading states, built in and customisable
+[] Events
+[] Toggle auto binding, enable api for calling bind on the container
