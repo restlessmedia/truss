@@ -1,32 +1,70 @@
 (function () {
-    var root = this;
+    var _root = this;
+    var _truss;
+    var _fieldPlugins = []; // contains all the fields plugins
 
-    var truss;
     if (typeof exports !== 'undefined') {
-        truss = exports;
+        _truss = exports;
     } else {
-        truss = root.truss = {};
+        _truss = _root.truss = {};
     }
 
-    truss.version = '1.0.0';
-    truss.$ = root.jQuery || root.$;
+    _truss.version = '1.0.0';
+    _truss.$ = _root.jQuery || _root.$;
+
+    // add to the global namespace
+    _root.truss = _truss;
+
+    // helper for iterating over collections
+    var forEach = function (a, fn) {
+        var i = a.length || 0;
+        var results = new Array(i);
+        if (i) {
+            while (i--) {
+                var result = fn.call(a[i]);
+                results[i] = result;
+
+                if (result === false) {
+                    break;
+                }
+            }
+        }
+        return results;
+    };
 
     // a field is a model of a field for a container
     var Field = function (element, config) {
+        var name = config.name.split(':');
         this.element = element;
-        this.name = config.name;
+        this.name = name[0];
+        this.plugin = name.length == 2 ? name[1] : null;
         return this;
     };
+
 
     Field.prototype.set = function (value) {
         // TODO: different binding techniques for different node types
         $(this.element).text(value);
     };
 
-    Field.prototype.bind = function (data) {
+    Field.prototype.bind = function (container, data) {
+        var value;
+
         if (data.hasOwnProperty(this.name)) {
-            this.set(data[this.name]);
+            value = data[this.name];
         }
+
+        if (this.plugin && _fieldPlugins[this.plugin]) {
+            _fieldPlugins[this.plugin](container, this, value);
+        }
+        else {
+            this.set(value);
+        }
+    };
+
+    // field plugin registration
+    _truss.registerFieldPlugin = function (name, fn) {
+        _fieldPlugins[name] = fn;
     };
 
     // a container is a truss container which encapsulates the binding fields for an endpoint
@@ -37,21 +75,10 @@
     };
 
     Container.prototype.bind = function (data) {
+        var that = this;
         forEach(this.fields, function () {
-            this.bind(data);
+            this.bind(that, data);
         });
-    };
-
-    // helper for iterating over collections
-    var forEach = function (a, fn) {
-        var i = a.length || 0;
-        var results = new Array(i);
-        if (i) {
-            while (i--) {
-                results[i] = fn.call(a[i]);
-            }
-        }
-        return results;
     };
 
     var dataAttr = function (element) {
@@ -80,13 +107,15 @@
 
     // finds containers in the dom to register
     var findContainers = function () {
-        return forEach(truss.$('[data-src]'), function () {
+        return forEach(_truss.$('[data-src]'), function () {
             return new Container(this, dataAttr(this), findFields(this));
         });
     };
 
-    // global register
-    forEach(findContainers(), function () {
-        init(this);
+    $(document).ready(function () {
+        // global register
+        forEach(findContainers(), function () {
+            init(this);
+        });
     });
 }).call(this);
