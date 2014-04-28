@@ -3,12 +3,14 @@
 <body>
     <h2>No row defined</h2>
     <div data-src="data.json">
-        <h1 data-name="title"></h1>
+        <h1 data-name="title" data-format="'Mr $s'">old title <sup>TH</sup></h1>
         <p data-name="body"></p>
-        <p data-name="createdOn"></p>
+        <p data-name="createdOn" data-format="Date: $s" data-plugin="dateFormat"></p>
+        <img data-name="title" data-format="$s.jpg" />
     </div>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script type="application/javascript" src="multiple.js"></script>
     <script type="application/javascript" src="../truss.js"></script>
+    <script type="application/javascript" src="truss-dateFormat.js"></script>
 </body>
 </html>
