@@ -114,7 +114,6 @@
         });
     };
 
-<<<<<<< HEAD
     Container.prototype.visible = function (isVisible) {
         var $element = $(this.element);
         if (isVisible) {
@@ -122,22 +121,6 @@
         }
         else {
             $element.hide();
-=======
-    Container.prototype.bind = function (data) {
-        var that = this;
-        var row = that.element;
-        if ('length' in data) {
-            forEach(data, function (i) {
-                that.bindRow(row, this);
-                // only create a new row if last data item
-                if (i > 0) {
-                    row = that.clone();
-                    that.element.parentNode.appendChild(row);
-                }
-            });
-        } else {
-            that.bindRow(row, data);
->>>>>>> 252496b951b422ea2a660b30ef10e6c6dac02cd0
         }
     };
 
