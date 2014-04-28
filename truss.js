@@ -124,15 +124,17 @@
         }
     };
 
-    Container.prototype.addRow = function (data) {
+    Container.prototype.addRow = function (data, after) {
         var row = this.element.cloneNode(true);
+        // remove src for all new child rows
         row.removeAttribute('data-src');
         this.bindRow(row, data);
-        this.element.parentNode.appendChild(row);
+        this.element.parentNode.insertBefore(row, after.nextSibling);
         return row;
     };
 
     Container.prototype.bind = function (data) {
+        console.log(data);
         // always work with a collection
         data = 'length' in data ? data : [data];
         if (data.length) {
@@ -140,8 +142,9 @@
             // get the first record, this is applied to the first template row
             var first = data.shift();
             // loop through remaining records
+            var row;
             forEach(data, function (obj, i) {
-                that.addRow(obj);
+                row = that.addRow(obj, /* previous row or container element */ row || that.element);
             });
             // bind to the template row
             this.bindRow(this.element, first);
