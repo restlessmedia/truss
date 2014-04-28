@@ -1,6 +1,7 @@
 (function () {
     var _root = this;
     var _truss;
+    var _plugins = [];
 
     if (typeof exports !== 'undefined') {
         _truss = exports;
@@ -8,28 +9,59 @@
         _truss = _root.truss = {};
     }
 
-    _truss.version = '1.0.0';
+    _truss.version = '1.0.1';
     _truss.$ = _root.jQuery || _root.$;
-
-    // add to the global namespace
     _root.truss = _truss;
 
-    // helper for iterating over collections
-    var forEach = function (a, fn) {
-        var len = a.length || 0;
-        var results = new Array(len);
-        if (len) {
-            var i = len - 1;
-            while (i > -1) {
-                var result = fn.apply(a[i], [i]);
-                results[i] = result;
-                if (result === false) {
-                    break;
-                }
-                i--;
-            }
+    _truss.registerPlugin = function registerPlugin(name, plugin) {
+        _plugins[name] = plugin;
+    };
+
+    var attr = function (element, name, value) {
+        if (arguments.length === 3) {
+            element.setAttribute(name, value);
+        } else if (element.hasAttribute(name)) {
+            value = element.getAttribute(name);
         }
-        return results;
+        return value;
+    };
+
+    var forEach = function (data, fn) {
+        if (!Array.prototype.forEach) {
+            var length = data.length >>> 0;
+            while (++i < length) {
+                if (i in data) {
+                    fn.apply(data[i], [data[i], i]);
+                }
+            }
+        } else {
+            data.forEach(fn);
+        }
+    };
+
+    var data = function (element) {
+        return $(element).data();
+    };
+
+    var text = function (element, value) {
+        if (element.childNodes.length) {
+            if (element.firstChild.nodeType === 3) {
+                element.firstChild.nodeValue = value;
+            }
+        } else {
+            element.appendChild(document.createTextNode(value));
+        }
+    };
+
+    var fetch = function (container) {
+        return $.ajax({ url: container.src });
+    };
+
+    var resolve = function (data, reference) {
+        var index = function (o, i) {
+            return o[i]
+        };
+        return reference.split('.').reduce(index, data);
     };
 
     var Container = function (element, config) {
@@ -38,48 +70,86 @@
         return this;
     };
 
-    Container.prototype.clone = function () {
-        var element = this.element.cloneNode(true);
-        element.removeAttribute('data-src');
-        return element;
+    Container.prototype.getValue = function (element, data, name) {
+        var value = resolve(data, name);
+        var pluginName = attr(element, 'data-plugin');
+        if (pluginName && _plugins[pluginName]) {
+            value = _plugins[pluginName].call(this, element, value);
+        }
+        return value;
+    };
+
+    Container.prototype.setValue = function (element, value) {
+        var format = attr(element, 'data-format');
+        if (format) {
+            value = format.replace(/\$s/g, value)
+        }
+        switch (element.tagName.toLowerCase()) {
+            case 'img':
+                attr(element, 'src', value);
+                break;
+            default:
+                text(element, value);
+        }
+    };
+
+    Container.prototype.bindField = function (element, data) {
+        var name = attr(element, 'data-name');
+        if (name) {
+            var value = this.getValue(element, data, name);
+            if (value) {
+                this.setValue(element, value);
+            }
+            else {
+                $(element).hide();
+            }
+        }
     };
 
     Container.prototype.bindRow = function (row, data) {
         var that = this;
-        forEach($(row).find('[data-name]'), function () {
-            var name = this.getAttribute('data-name');
-            if (data.hasOwnProperty(name)) {
-                $(this).text(data[name]);
-            }
+        this.bindField(row, data);
+        $(row).find('[data-name]').each(function () {
+            that.bindField(this, data);
         });
     };
 
-    Container.prototype.bind = function (data) {
-        var that = this;
-        var row = that.element;
-        if ('length' in data) {
-            forEach(data, function (i) {
-                that.bindRow(row, this);
-                // only create a new row if last data item
-                if (i > 0) {
-                    row = that.clone();
-                    that.element.parentNode.appendChild(row);
-                }
-            });
-        } else {
-            this.bindRow(row, data);
+    Container.prototype.visible = function (isVisible) {
+        var $element = $(this.element);
+        if (isVisible) {
+            $element.show();
+        }
+        else {
+            $element.hide();
         }
     };
 
-    var dataAttr = function (element) {
-        return $(element).data();
+    Container.prototype.addRow = function (data) {
+        var row = this.element.cloneNode(true);
+        row.removeAttribute('data-src');
+        this.bindRow(row, data);
+        this.element.parentNode.appendChild(row);
+        return row;
     };
 
-    var fetch = function (container) {
-        return $.ajax({url: container.src});
+    Container.prototype.bind = function (data) {
+        // always work with a collection
+        data = 'length' in data ? data : [data];
+        if (data.length) {
+            var that = this;
+            // get the first record, this is applied to the first template row
+            var first = data.shift();
+            // loop through remaining records
+            forEach(data, function (obj, i) {
+                that.addRow(obj);
+            });
+            // bind to the template row
+            this.bindRow(this.element, first);
+        } else {
+            this.visible(false);
+        }
     };
 
-    // initialises a container
     var init = function (container) {
         fetch(container).done(function (data) {
             container.bind(data);
@@ -88,17 +158,15 @@
         });
     };
 
-    // finds containers in the dom to register
     var findContainers = function () {
-        return forEach(_truss.$('[data-src]'), function () {
-            return new Container(this, dataAttr(this));
+        var containers = [];
+        _truss.$('[data-src]').each(function () {
+            containers.push(new Container(this, data(this)));
         });
+        return containers;
     };
 
     $(document).ready(function () {
-        // global register
-        forEach(findContainers(), function () {
-            init(this);
-        });
+        forEach(findContainers(), init);
     });
 }).call(this);
