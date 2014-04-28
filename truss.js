@@ -162,6 +162,7 @@
         }).fail(function () {
             visible(that.element, false);
             that.raiseEvent('fetchFailed');
+            console.log(arguments);
         });
     };
 

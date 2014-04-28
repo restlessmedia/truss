@@ -2,23 +2,22 @@
 <head></head>
 <body>
     <h2>No row defined</h2>
-    <div data-src="data.json">
+    <div data-src="multiple.json">
         <h1 data-name="title" data-format="'Mr $s'">old title <sup>TH</sup></h1>
         <p data-name="body"></p>
         <p data-name="createdOn" data-format="Date: $s" data-plugin="dateFormat"></p>
         <img data-name="title" data-format="$s.jpg" />
     </div>
     <ul>
-        <li><a data-src="data.json" data-name="title"></a></li>
+        <li><a data-src="multiple.json" data-name="title"></a></li>
     </ul>
     <table>
-        <tr data-src="data.json">
+        <tr data-src="multiple.json" data-bind="false">
             <td data-name="title"></td>
         </tr>
     </table>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <script type="application/javascript" src="multiple.js"></script>
     <script type="application/javascript" src="../truss.js"></script>
-    <!--<script type="application/javascript" src="truss-dateFormat.js"></script>-->
+    <script type="application/javascript" src="truss-dateFormat.js"></script>
 </body>
 </html>
