@@ -1,7 +1,8 @@
 (function () {
     truss.registerPlugin('dateFormat', function (element, value) {
         var values = [];
-        values.push(value.getDate(), value.getMonth() + 1, value.getFullYear());
+        var d = new Date(value);
+        values.push(d.getDate(), d.getMonth() + 1, d.getFullYear());
         return values.join('-');
     });
 }).call(this);

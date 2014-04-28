@@ -67,8 +67,8 @@
     };
 
     var resolve = function (data, reference) {
-        var index = function (o, i) {
-            return o[i]
+        var index = function (d, name, i) {
+            return d[name];
         };
         return reference.split('.').reduce(index, data);
     };
