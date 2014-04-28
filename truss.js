@@ -2,6 +2,7 @@
     var _root = this;
     var _truss;
     var _plugins = [];
+    var _displayStates = {none: false, block: true, inline: true};
 
     if (typeof exports !== 'undefined') {
         _truss = exports;
@@ -39,6 +40,14 @@
         }
     };
 
+    var visible = function (element, isVisible) {
+        if (arguments.length === 1) {
+            return element.style.display ? _displayStates[element.style.display.toLowerCase()] : true;
+        }
+        element.style.display = isVisible ? 'block' : 'none';
+        return isVisible;
+    };
+
     var data = function (element) {
         return $(element).data();
     };
@@ -67,7 +76,14 @@
     var Container = function (element, config) {
         this.src = config.src;
         this.element = element;
+        this.autoBind = attr(element, 'data-bind') !== 'false';
         return this;
+    };
+
+    Container.prototype.raiseEvent = function (name, args) {
+        args = args || [];
+        args.unshift(this); // insert container into beginning of args
+        $(this.element).trigger(name, args);
     };
 
     Container.prototype.getValue = function (element, data, name) {
@@ -114,50 +130,47 @@
         });
     };
 
-    Container.prototype.visible = function (isVisible) {
-        var $element = $(this.element);
-        if (isVisible) {
-            $element.show();
-        }
-        else {
-            $element.hide();
-        }
-    };
-
     Container.prototype.addRow = function (data, after) {
         var row = this.element.cloneNode(true);
-        // remove src for all new child rows
+        // remove src for all new rows
         row.removeAttribute('data-src');
         this.bindRow(row, data);
         this.element.parentNode.insertBefore(row, after.nextSibling);
         return row;
     };
 
-    Container.prototype.bind = function (data) {
-        console.log(data);
-        // always work with a collection
-        data = 'length' in data ? data : [data];
-        if (data.length) {
-            var that = this;
-            // get the first record, this is applied to the first template row
-            var first = data.shift();
-            // loop through remaining records
-            var row;
-            forEach(data, function (obj, i) {
-                row = that.addRow(obj, /* previous row or container element */ row || that.element);
-            });
-            // bind to the template row
-            this.bindRow(this.element, first);
-        } else {
-            this.visible(false);
-        }
+    Container.prototype.bind = function () {
+        var that = this;
+        fetch(this).done(function (data) {
+            // always work with a collection
+            data = 'length' in data ? data : [data];
+            if (data.length) {
+                // get the first record, this is applied to the first template row
+                var first = data.shift();
+                // loop through remaining records
+                var row;
+                forEach(data, function (obj, i) {
+                    row = that.addRow(obj, /* after: previous row or container element */ row || that.element);
+                });
+                // bind to the template row
+                that.bindRow(that.element, first);
+            } else {
+                // no data, hide the entire container element
+                visible(that.element, false);
+            }
+            that.raiseEvent('bound');
+        }).fail(function () {
+            visible(that.element, false);
+            that.raiseEvent('fetchFailed');
+        });
     };
 
     var init = function (container) {
-        fetch(container).done(function (data) {
-            container.bind(data);
-        }).fail(function () {
-            console.log('Failed to return data for src = "' + container.src + '"');
+        if (container.autoBind) {
+            container.bind();
+        }
+        $(container.element).on('bind', function () {
+            container.bind();
         });
     };
 
