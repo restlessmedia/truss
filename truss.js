@@ -67,13 +67,24 @@
   };
 
   var resolve = function (data, reference) {
-    var parts = reference.split('.');
-    var length = parts.length;
-
-    var index = function (d, name, i) {
-      return d[name];
-    };
-    return reference.split('.').reduce(index, data);
+    var names = reference.split('.');
+    var name = names[0];
+    var len = names.length;
+    var value;
+    
+    if(name in data){
+        value = data[name];
+        if(len > 1){
+            var i = 0;
+            while(++i < len){
+                var name = names[i];
+                if(!(name in result))
+                    break;
+                value = result[name];
+            }
+        }
+    }
+    return value;
   };
 
   var Container = function (element, config) {
