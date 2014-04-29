@@ -28,15 +28,12 @@
   };
 
   var forEach = function (data, fn) {
-    if (!Array.prototype.forEach) {
-      var length = data.length >>> 0;
-      while (++i < length) {
-        if (i in data) {
-          fn.apply(data[i], [data[i], i]);
+    var len = data.length >>> 0;
+    if(len){
+        var i = -1;
+        while (++i < len) {
+            fn.apply(data[i], [data[i], i]);
         }
-      }
-    } else {
-      data.forEach(fn);
     }
   };
 
@@ -156,8 +153,8 @@
         var first = data.shift();
         // loop through remaining records
         var row;
-        forEach(data, function (obj, i) {
-          row = that.addRow(obj, /* after: previous row or container element */ row || that.element);
+        forEach(data, function () {
+          row = that.addRow(this, /* after: previous row or container element */ row || that.element);
         });
         // bind to the template row
         that.bindRow(that.element, first);
