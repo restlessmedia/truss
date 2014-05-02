@@ -1,58 +1,42 @@
 truss
 =====
 
-A simple data binding library for elements using javascript.
+A simple data templating library for elements using javascript.  There are two ways you can bind data to a template, inline or with external files.
 
-## Example
+## Inline templating
 
-Markup:
+    <script type="text/x-dot-template" data-url="countries.json">
+        <table>
+            {{~data :country}}
+            <tr>
+                <td>{{=country.name}}</td>
+                <td>{{=country.code}}</td>
+            </tr>
+            {{~}}
+        </table>
+    </script>
 
-    <div data-src="/api/getData">
-        <h1 data-name="title"></h1>
-        <p data-name="body"></p>
-        <p data-name="createdOn"></p>
-    </div>
-	
-Data:
+## External templating with .html files
 
-    {title: 'something', body: 'something else...', createdOn: new Date()}
-	
-...becomes
-
-    <div data-src="/api/getData">
-        <h1 data-name="title">something</h1>
-        <p data-name="body">something else</p>
-        <p data-name="createdOn">Fri Apr 25 2014 12:42:12 GMT+0100 (GMT Daylight Time)</p>
-    </div>
-	
-## Multiple (array) records?
-
-	<table>
-		<tr data-src="/api/getData">
-			<td data-name="title">something</td>
-			<td data-name="body">something else</td>
-			<td data-name="createdOn">Fri Apr 25 2014 12:42:12 GMT+0100 (GMT Daylight Time)</td>
-		</tr>
-	</table>
-
-...becomes
+    <script type="text/x-dot-template" data-url="countries.json" data-template="template"></script>
+    
+template.html
 
     <table>
-		<tr data-src="/api/getData">
-			<td data-name="title">something</td>
-			<td data-name="body">something else</td>
-			<td data-name="createdOn">Fri Apr 25 2014 12:42:12 GMT+0100 (GMT Daylight Time)</td>
-		</tr>
-		<tr>
-			<td data-name="title">something</td>
-			<td data-name="body">something else</td>
-			<td data-name="createdOn">Fri Apr 25 2014 12:42:12 GMT+0100 (GMT Daylight Time)</td>
-		</tr>
+        {{~data :country}}
+        <tr>
+            <td>{{=country.name}}</td>
+            <td>{{=country.code}}</td>
+        </tr>
+        {{~}}
     </table>
     
+## Dependencies
+
+- doT https://github.com/olado/doT (for templating)
+- jQuery (for data retrieval and promises)
+
 ## To do
 
 - Unit tests
 - Loading states, built in and customisable
-- Events
-- Toggle auto binding, enable api for calling bind on the container
